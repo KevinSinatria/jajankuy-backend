@@ -9,7 +9,7 @@ Aplikasi pemesanan jajanan digital untuk siswa sekolah.
 
 ## Cara Clone Repo
 1. Fork repo ini
-2. Clone: `git clone https://github.com/KevinSinatria/jajankuy-frontend.git`
+2. Clone: `git clone https://github.com/KevinSinatria/jajankuy-backend.git`
 3. `npm install`
 4. `npm run dev`
 
