@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->enum('type', ['Pemasukan', 'Pengeluaran']);
             $table->decimal('amount', 13, 2);
             $table->text('description');
+            $table->timestamp('transaction_date')->default(now());
             $table->timestamps();
         });
     }
