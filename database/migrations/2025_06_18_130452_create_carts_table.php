@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->boolean('is_paid')->default(false);
-            $table->enum('status', ['Tertunda', 'Sedang Disiapkan', 'Siap Diambil', 'Selesai', 'Dibatalkan'])->default('Belum Dibayar');
+            $table->enum('status', ['tertunda', 'checkout_berhasil', 'checkout_gagal'])->default('tertunda');
             $table->timestamp('added_at')->useCurrent();
         }); 
     }

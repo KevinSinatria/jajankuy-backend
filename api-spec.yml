@@ -1,0 +1,136 @@
+openapi: '3.0.3'
+info:
+  title: Jajankuy RESTful API
+  description: API untuk aplikasi pemesanan jajanan online Jajankuy. Melayani fitur untuk siswa dan admin
+  version: '1.0'
+  contact:
+    name: Tim Backend Foralgo
+    email: jajankuyori@gmail.com
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Development Server (Local)
+
+components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) di seluruh API.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter the Bearer Token to authorize the request (e.g. Bearer eyJ...).
+  schemas: # Mendefinisikan skema objek (model data) yang bisa digunakan kembali.
+    ErrorResponse: # Skema untuk respons error umum.
+      type: object
+      properties:
+        message:
+          type: string
+          description: Pesan error
+        errors:
+          type: object
+          nullable: true # Bisa null jika tidak ada error validasi spesifik
+          description: Detail error validasi (opsional)
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nama pengguna
+        email:
+          type: string
+          format: email
+          description: Email pengguna
+        password:
+          type: string
+          description: Kata sandi pengguna
+    RegisterResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Pesan sukses
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email pengguna
+        password:
+          type: string
+          description: Kata sandi pengguna
+    LoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Pesan sukses
+        token:
+          type: string
+          description: Token JWT
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/UserResponse'
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID unik pengguna
+        name:
+          type: string
+          description: Nama pengguna
+        email:
+          type: string
+          format: email
+          description: Email pengguna
+        role:
+          type: string
+          enum:
+            - siswa
+            - offline
+            - admin
+          description: Role pengguna       
+
+paths:
+  /:
+    get:
+      responses:
+        '200':
+          description: OK
+  /profile:
+    get:
+      summary: Mendapatkan profil pengguna
+      tags:
+        - Pengguna
+      security: # INI TEMPAT MENERAPKAN KEAMANAN PADA ENDPOINT INI
+        - bearerAuth: [] # Butuh 'bearerAuth' yang didefinisikan di components
+      responses:
+        '200':
+          description: OK
+          # ...
+        '401':
+          description: Unauthorized
+          
+    post:
+      summary: Mendapatkan profil pengguna
+      tags:
+        - Pengguna
+      security: # INI TEMPAT MENERAPKAN KEAMANAN PADA ENDPOINT INI
+        - bearerAuth: [] # Butuh 'bearerAuth' yang didefinisikan di components
+      responses:
+        '200':
+          description: OK
+          # ...
+        '401':
+          description: Unauthorized
+          
+
+  /snacks:
+    get:
+      summary: Mendapatkan daftar jajanan
+      tags:
+        - Jajanan
+      # TIDAK ADA BAGIAN 'security:' DI SINI, ARTINYA INI PUBLIK
+      responses:
+        '200':
+          description: OK
+          # ...
