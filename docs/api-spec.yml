@@ -15,7 +15,7 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      bearerFormat: Sanctum
       description: Enter the Bearer Token to authorize the request (e.g. Bearer eyJ...).
   schemas: # Mendefinisikan skema objek (model data) yang bisa digunakan kembali.
     SuccessResponse: # Skema untuk respons sukses umum.
@@ -42,6 +42,9 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
     UnauthorizedResponse:
       type: object
       properties:
+        success:
+          type: boolean
+          example: false
         message:
           type: string
           description: Pesan error
@@ -53,9 +56,13 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
     ForbiddenResponse:
       type: object
       properties:
+        success:
+          type: boolean
+          example: false
         message:
           type: string
           description: Pesan error
+          example: Anda tidak memiliki izin untuk mengakses sumber daya ini.
         errors:
           type: object
           nullable: true # Bisa null jika tidak ada error validasi spesifik
@@ -976,8 +983,14 @@ paths:
           description: OK
           content:
             application/json:
-              schema:
+              schema: 
                 $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
 
   /logout:
     post:
@@ -1153,6 +1166,8 @@ paths:
       tags:
         - Carts - Customers
       summary: Mendapatkan daftar keranjang
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1164,6 +1179,8 @@ paths:
       tags:
         - Carts - Customers
       summary: Menambahkan jajanan ke keranjang
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1193,6 +1210,8 @@ paths:
       tags:
         - Carts - Customers
       summary: Memperbarui jumlah jajanan di keranjang
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1224,6 +1243,8 @@ paths:
       tags:
         - Carts - Customers
       summary: Menghapus jajanan dari keranjang
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1249,6 +1270,8 @@ paths:
       tags:
         - Favorites - Customers
       summary: Mendapatkan daftar jajanan yang disukai
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1266,6 +1289,8 @@ paths:
       tags:
         - Favorites - Customers
       summary: Menambahkan jajanan ke daftar suka
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1291,6 +1316,8 @@ paths:
       tags:
         - Favorites - Customers
       summary: Menghapus jajanan dari daftar suka
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1316,6 +1343,8 @@ paths:
       tags:
         - Orders - Customers
       summary: Membuat pesanan
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1341,6 +1370,8 @@ paths:
       tags:
         - Products - Admin
       summary: Mendapatkan daftar produk
+      security:
+        - bearerAuth: []
       parameters:
         - in: query
           name: page
@@ -1362,12 +1393,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
 
   /admin/products/{category_slug}:
     get:
       tags:
         - Products - Admin
       summary: Mendapatkan daftar produk dalam kategori
+      security:
+        - bearerAuth: []
       parameters:
         - in: query
           name: page
@@ -1389,10 +1428,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
     post:
       tags:
         - Products - Admin
       summary: Menambahkan produk
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1406,6 +1453,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1418,6 +1471,8 @@ paths:
       tags:
         - Products - Admin
       summary: Memperbarui produk
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1431,6 +1486,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:  
@@ -1441,6 +1502,8 @@ paths:
       tags: 
         - Products - Admin
       summary: Menghapus produk
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1454,6 +1517,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1466,6 +1535,8 @@ paths:
       tags: 
         - Categories - Admin
       summary: Menambahkan kategori
+      security:
+        - bearerAuth: []      
       requestBody:
         required: true
         content:
@@ -1485,12 +1556,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"  
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
 
   /admin/categories/{category_slug}: 
     put:
       tags:
         - Categories - Admin
       summary: Memperbarui kategori
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1510,6 +1589,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1520,6 +1605,8 @@ paths:
       tags:
         - Categories - Admin
       summary: Menghapus kategori
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1533,6 +1620,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1545,6 +1638,8 @@ paths:
       tags:
         - Orders - Admin
       summary: Mendapatkan daftar pesanan
+      security:
+        - bearerAuth: []
       parameters:
         - in: query
           name: page
@@ -1566,10 +1661,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
     post:
       tags:
         - Orders - Admin
       summary: Menambahkan pesanan
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1583,12 +1686,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
 
   /admin/orders/{order_id}:
     get:
       tags:
         - Orders - Admin
       summary: Mendapatkan detail pesanan
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1602,6 +1713,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1612,6 +1729,8 @@ paths:
       tags: 
         - Orders - Admin
       summary: Memperbarui pesanan
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1625,6 +1744,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1635,6 +1760,8 @@ paths:
       tags:
         - Orders - Admin
       summary: Menghapus pesanan
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1648,6 +1775,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1660,6 +1793,8 @@ paths:
       tags:
         - Transactions - Admin
       summary: Mendapatkan daftar transaksi
+      security:
+        - bearerAuth: []
       parameters:
         - in: query
           name: page
@@ -1681,12 +1816,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
   
   /admin/transactions/{transaction_id}:
     get:
       tags:
         - Transactions - Admin
       summary: Mendapatkan detail transaksi
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1700,6 +1843,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1710,6 +1859,8 @@ paths:
       tags:
         - Transactions - Admin
       summary: Memperbarui transaksi
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1723,6 +1874,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1733,6 +1890,8 @@ paths:
       tags: 
         - Transactions - Admin
       summary: Menghapus transaksi
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1746,6 +1905,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1758,6 +1923,8 @@ paths:
       tags:
         - Offline Users - Admin
       summary: Mendapatkan daftar pengguna offline
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1771,10 +1938,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
     post:
       tags:
         - Offline Users - Admin
       summary: Menambahkan pengguna offline
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1794,11 +1969,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
   /admin/offline-users/{offline_user_id}:
     get:
       tags:
         - Offline Users - Admin
       summary: Mendapatkan detail pengguna offline
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1812,6 +1995,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1822,6 +2011,8 @@ paths:
       tags:
         - Offline Users - Admin
       summary: Memperbarui pengguna offline
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK
@@ -1835,6 +2026,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
@@ -1845,6 +2042,8 @@ paths:
       tags:
         - Offline Users - Admin
       summary: Menghapus pengguna offline
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: OK"
@@ -1858,6 +2057,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
         "404":
           description: Not Found
           content:
