@@ -50,7 +50,6 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Data yang anda masukkan invalid',
-                'message' => 'Data yang anda masukkan invalid',
                 'errors' => [
                     'email' => ['Email sudah didaftarkan oleh pengguna lain.'],
                     'password' => ['Password dan validasi password tidak sama.']
