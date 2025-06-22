@@ -20,15 +20,15 @@ class AuthController extends Controller
         if (! $user || ! Hash::check($request->password, $user->password)){
             return response()->json([
                 'success' => false,
-                'message' => 'string',
-                'errors' => (object) []
+                'message' => 'Email atau password anda salah, silahkan coba lagi',
+                'errors' => null
             ], 401);
         }
 
         $token = $user->createToken($request->email)->plainTextToken;
 
         return response()->json([
-            'message' => "string",
+            'message' => "Anda telah berhasil login",
             'token' => $token,
             'user' => [
                 'id' => $user->id,
@@ -49,8 +49,12 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'string',
-                'errors' => (object) []  
+                'message' => 'Data yang anda masukkan invalid',
+                'message' => 'Data yang anda masukkan invalid',
+                'errors' => [
+                    'email' => ['Email sudah didaftarkan oleh pengguna lain.'],
+                    'password' => ['Password dan validasi password tidak sama.']
+                ]
             ], 422);
         }
         $user = User::create([
@@ -62,7 +66,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'string'
+            'message' => 'Pengguna berhasil didaftarkan',
         ]);
     }
 
@@ -72,8 +76,8 @@ class AuthController extends Controller
         if (!$user){
             return response()->json()([
                 'success' => false,
-                'message' => 'string',
-                'errors' => (object) []
+                'message' => 'Anda belum login, silahkan login terlebih dahulu.',
+                'errors' => null
             ], 401);
         }
 
@@ -81,7 +85,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'string'
+            'message' => 'Anda telah berhasil logout'
         ], 200);
     }
 }
