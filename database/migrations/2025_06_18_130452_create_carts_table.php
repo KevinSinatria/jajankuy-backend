@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->enum('status', ['tertunda', 'checkout_berhasil', 'checkout_gagal'])->default('tertunda');
+            $table->decimal('total_price', 13, 2);
             $table->timestamp('added_at')->default(now());
+            $table->timestamps();
         }); 
     }
 

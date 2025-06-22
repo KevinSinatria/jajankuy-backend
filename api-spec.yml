@@ -1,8 +1,8 @@
-openapi: '3.0.3'
+openapi: "3.0.3"
 info:
   title: Jajankuy RESTful API
   description: API untuk aplikasi pemesanan jajanan online Jajankuy. Melayani fitur untuk siswa dan admin
-  version: '1.0'
+  version: "1.0"
   contact:
     name: Tim Backend Foralgo
     email: jajankuyori@gmail.com
@@ -18,6 +18,16 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
       bearerFormat: JWT
       description: Enter the Bearer Token to authorize the request (e.g. Bearer eyJ...).
   schemas: # Mendefinisikan skema objek (model data) yang bisa digunakan kembali.
+    SuccessResponse: # Skema untuk respons sukses umum.
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+
     ErrorResponse: # Skema untuk respons error umum.
       type: object
       properties:
@@ -28,6 +38,40 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
           type: object
           nullable: true # Bisa null jika tidak ada error validasi spesifik
           description: Detail error validasi (opsional)
+
+    UnauthorizedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Pesan error
+        errors:
+          type: object
+          nullable: true # Bisa null jika tidak ada error validasi spesifik
+          description: Detail error validasi (opsional)
+
+    ForbiddenResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Pesan error
+        errors:
+          type: object
+          nullable: true # Bisa null jika tidak ada error validasi spesifik
+          description: Detail error validasi (opsional)
+      
+    NotFoundResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Pesan error
+        errors:
+          type: object
+          nullable: true # Bisa null jika tidak ada error validasi spesifik
+          description: Detail error validasi (opsional)
+
     RegisterRequest:
       type: object
       properties:
@@ -42,11 +86,7 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
           type: string
           description: Kata sandi pengguna
     RegisterResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Pesan sukses
+      $ref: "#/components/schemas/SuccessResponse"
     LoginRequest:
       type: object
       properties:
@@ -67,7 +107,27 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
           description: Token JWT
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         user:
-          $ref: '#/components/schemas/UserResponse'
+          $ref: "#/components/schemas/UserResponse"
+
+    LogoutResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    ProfileResponse:
+      $ref: "#/components/schemas/UserResponse"
+
+    PutProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nama pengguna (opsional)
+      
+    PutProfileResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    DeleteAccountResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
     UserResponse:
       type: object
       properties:
@@ -88,49 +148,1732 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
             - siswa
             - offline
             - admin
-          description: Role pengguna       
+          description: Role pengguna
+
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID unik kategori
+        name:
+          type: string
+          description: Nama kategori
+        image_url:
+          type: string
+          description: URL gambar kategori
+        created_at:
+          type: string
+          format: date-time
+          description: Waktu pembuatan kategori
+        updated_at:
+          type: string
+          format: date-time
+          description: Waktu pembaruan kategori
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductResponse"
+            description: Daftar jajanan dalam kategori
+
+    ProductResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID unik jajanan
+        name:
+          type: string
+          description: Nama jajanan
+        slug:
+          type: string
+          description: Slug jajanan
+        price:
+          type: number
+          description: Harga jajanan
+        description:
+          type: string
+          description: Deskripsi jajanan
+        category_id:
+          type: integer
+          format: int64
+          description: ID kategori jajanan
+        stock:
+          type: integer
+          format: int64
+          description: Stok jajanan
+        image_url:
+          type: string
+          description: URL gambar Jajanan
+        category:
+          $ref: "#/components/schemas/CategoryResponse"
+          description: Kategori jajanan
+
+    CartItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID unik item keranjang
+        cart_id:
+          type: integer
+          format: int64
+          description: ID keranjang
+        product_id:
+          type: integer
+          format: int64
+          description: ID jajanan
+        quantity:
+          type: integer
+          format: int64
+          description: Jumlah item
+        price_at_checkout:
+          type: number
+          description: Harga saat checkout
+        subtotal:
+          type: number
+          description: Subtotal
+        product:
+          $ref: "#/components/schemas/ProductResponse"
+          description: Detail Produk
+        
+
+    CartResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID unik keranjang
+        user_id:
+          type: integer
+          format: int64
+          description: ID Pengguna
+        status:
+          type: string
+          description: Status keranjang
+        total:
+          type: number
+          description: Total harga
+        cart_items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItemResponse"
+            description: Daftar item keranjang    
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID unik pesanan
+        user_id:
+          type: integer
+          format: int64
+          description: ID Pengguna
+        user_name:
+          type: string
+          description: Nama pengguna
+        notes:
+          type: string
+          description: Catatan pesanan
+        is_paid:
+          type: boolean
+          description: Status pembayaran
+        total_price:
+          type: number
+          description: Total harga pesanan
+        status:
+          type: string
+          description: Status pesanan
+        paid_at:
+          type: string
+          format: date-time
+          description: Waktu pembayaran
+        cancelled_at:
+          type: string
+          format: date-time
+          description: Waktu pembatalan
+        created_at:
+          type: string
+          format: date-time
+          description: Waktu pembuatan pesanan
+        updated_at:
+          type: string
+          format: date-time
+          description: Waktu pembaruan pesanan
+        order_items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItemsResponse"
+            description: Daftar item pesanan
+        user:
+          $ref: "#/components/schemas/UserResponse"
+          description: Pengguna
+        
+    OrderItemsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID unik item pesanan
+        order_id:
+          type: integer
+          format: int64
+          description: ID pesanan
+        product_id:
+          type: integer
+          format: int64
+          description: ID jajanan
+        quantity:
+          type: integer
+          format: int64
+          description: Jumlah item
+        price_at_purchase:
+          type: number
+          description: Harga saat pembelian
+        subtotal:
+          type: number  
+          description: Subtotal
+
+    TransactionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID unik transaksi
+        user_id:
+          type: integer
+          format: int64
+          description: ID pengguna
+        type:
+          type: string
+          description: Jenis transaksi
+        amount:
+          type: number
+          description: Jumlah transaksi
+        description:
+          type: string
+          description: Deskripsi transaksi
+        transaction_date:
+          type: string
+          format: date-time
+          description: Waktu transaksi
+        created_at:
+          type: string
+          format: date-time
+          description: Waktu pembuatan transaksi
+        updated_at:
+          type: string
+          format: date-time
+          description: Waktu pembaruan transaksi
+        user:
+          $ref: "#/components/schemas/UserResponse"
+          description: Pengguna
+          
+    GetAllProductsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductResponse"
+            description: Daftar jajanan
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+              format: int64
+              description: Jumlah total produk
+            per_page:
+              type: integer
+              format: int64
+              description: Jumlah produk per halaman
+            current_page:
+              type: integer
+              format: int64
+              description: Halaman saat ini
+            last_page:
+              type: integer
+              format: int64
+              description: Halaman terakhir
+            from:
+              type: integer
+              format: int64
+              description: Indeks awal
+            to:
+              type: integer
+              format: int64
+              description: Indeks akhir
+            path:
+              type: string
+              description: URL dasar endpoint tanpa query pagination
+            links:
+              type: array
+              items:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: URL halaman
+                  label:
+                    type: string
+                    description: Label halaman
+                  active:
+                    type: boolean
+                    description: Status halaman aktif
+          
+    GetProductBySlugResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          $ref: "#/components/schemas/ProductResponse"
+          description: Detail Jajanan
+
+    PostProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nama jajanan
+        price:
+          type: number
+          description: Harga jajanan
+        description:
+          type: string
+          description: Deskripsi jajanan
+        category_id:
+          type: integer
+          format: int64
+          description: ID kategori jajanan
+        stock:
+          type: integer
+          format: int64
+          description: Stok jajanan
+        image_url:
+          type: string
+          description: URL gambar Jajanan (opsional)
+
+    PostProductResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+      
+    PutProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nama jajanan
+        price:
+          type: number
+          description: Harga jajanan
+        description:
+          type: string
+          description: Deskripsi jajanan
+        category_id:
+          type: integer
+          format: int64
+          description: ID kategori jajanan
+        stock:
+          type: integer
+          format: int64
+          description: Stok jajanan
+        image_url:
+          type: string
+          description: URL gambar Jajanan (opsional)
+
+    PutProductResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    DeleteProductResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    GetAllCategoriesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryResponse"
+            description: Daftar kategori
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+              format: int64
+              description: Jumlah total kategori
+            per_page:
+              type: integer
+              format: int64
+              description: Jumlah kategori per halaman
+            current_page:
+              type: integer
+              format: int64
+              description: Halaman saat ini
+            last_page:
+              type: integer
+              format: int64
+              description: Halaman terakhir
+            from:
+              type: integer
+              format: int64
+              description: Indeks awal
+            to:
+              type: integer
+              format: int64
+              description: Indeks akhir
+            path:
+              type: string
+              description: URL dasar endpoint tanpa query pagination
+            links:
+              type: array
+              items:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: URL halaman
+                  label:
+                    type: string
+                    description: Label halaman
+                  active:
+                    type: boolean
+                    description: Status halaman aktif
+
+    PostCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nama kategori
+        image_url:
+          type: string
+          description: URL gambar kategori
+
+    PostCategoryResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    PutCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nama kategori
+        image_url:
+          type: string
+          description: URL gambar kategori
+
+    PutCategoryResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    DeleteCategoryResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    GetAllCartsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartResponse"
+            description: Daftar keranjang
+
+    PostCartRequest:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          format: int64
+          description: ID jajanan
+        quantity:
+          type: integer
+          format: int64
+          description: Jumlah item
+
+    PostCartResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+      
+    PutCartRequest:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          format: int64
+          description: ID jajanan
+        quantity:
+          type: integer
+          format: int64
+          description: Jumlah item
+
+    PutCartResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+        
+    DeleteCartResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+      
+    GetAllFavoritesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductResponse"
+            description: Daftar jajanan yang disukai
+
+    PostFavoriteRequest:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          format: int64
+          description: ID jajanan
+
+    PostFavoriteResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+    
+    DeleteFavoriteResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    GetAllOrdersResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderResponse"
+            description: Daftar pesanan
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+              format: int64
+              description: Jumlah total kategori
+            per_page:
+              type: integer
+              format: int64
+              description: Jumlah kategori per halaman
+            current_page:
+              type: integer
+              format: int64
+              description: Halaman saat ini
+            last_page:
+              type: integer
+              format: int64
+              description: Halaman terakhir
+            from:
+              type: integer
+              format: int64
+              description: Indeks awal
+            to:
+              type: integer
+              format: int64
+              description: Indeks akhir
+            path:
+              type: string
+              description: URL dasar endpoint tanpa query pagination
+            links:
+              type: array
+              items:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: URL halaman
+                  label:
+                    type: string
+                    description: Label halaman
+                  active:
+                    type: boolean
+                    description: Status halaman aktif
+
+    GetOrderResponse:
+      $ref: "#/components/schemas/OrderResponse"
+
+    PostOrderRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          description: ID pengguna
+        user_name:
+          type: string
+          description: Nama pengguna (opsional)
+        notes:
+          type: string
+          description: Catatan pesanan (opsional)
+        total_price:
+          type: number
+          description: Total harga pesanan
+        
+    PostOrderResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    PutOrderRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          description: ID pengguna
+        user_name:
+          type: string
+          description: Nama pengguna (opsional)
+        notes:
+          type: string
+          description: Catatan pesanan (opsional)
+        total_price:
+          type: number
+          description: Total harga pesanan (opsional)
+        status:
+          type: string
+          description: Status pesanan (opsional)
+        paid_at:
+          type: string
+          format: date-time
+          description: Waktu pembayaran (opsional)
+        cancelled_at:
+          type: string
+          format: date-time
+          description: Waktu pembatalan (opsional)
+      
+    PutOrderResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+  
+    DeleteOrderResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    GetAllTransactionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionResponse"
+            description: Daftar transaksi
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+              format: int64
+              description: Jumlah total transaksi
+            per_page:
+              type: integer
+              format: int64
+              description: Jumlah transaksi per halaman
+            current_page:
+              type: integer
+              format: int64
+              description: Halaman saat ini
+            last_page:
+              type: integer
+              format: int64
+              description: Halaman terakhir
+            from:
+              type: integer
+              format: int64
+              description: Indeks awal
+            to:
+              type: integer
+              format: int64
+              description: Indeks akhir
+            path:
+              type: string
+              description: URL dasar endpoint tanpa query pagination
+            links:
+              type: array
+              items:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: URL halaman
+                  label:
+                    type: string
+                    description: Label halaman
+                  active:
+                    type: boolean
+                    description: Status halaman aktif
+
+    GetTransactionResponse:
+      $ref: "#/components/schemas/TransactionResponse"
+
+    PutTransactionRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          description: ID pengguna
+        type:
+          type: string
+          description: Jenis transaksi
+        amount:
+          type: number
+          description: Jumlah transaksi
+        description:
+          type: string
+          description: Deskripsi transaksi
+
+    PutTransactionResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+
+    DeleteTransactionResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+    
+    GetAllUsersResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponse"
+            description: Daftar pengguna
+
+    GetAllOfflineUsersResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Status sukses
+        message:
+          type: string
+          description: Pesan sukses
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponse"
+            description: Daftar pengguna
+
+    GetOfflineUserResponse:
+      $ref: "#/components/schemas/UserResponse" 
+
+    PostOfflineUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nama pengguna
+        email:
+          type: string
+          description: Email pengguna
+        password:
+          type: string
+          description: Kata sandi pengguna
+
+    PostOfflineUserResponse:
+      $ref: "#/components/schemas/SuccessResponse"  
+
+    PutOfflineUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nama pengguna
+        email:
+          type: string
+          description: Email pengguna
+        password:
+          type: string
+          description: Kata sandi pengguna
+        
+    PutOfflineUserResponse:
+      $ref: "#/components/schemas/SuccessResponse"
+    
+    DeleteOfflineUserResponse:
+      $ref: "#/components/schemas/SuccessResponse"
 
 paths:
-  /:
-    get:
+  /register:
+    post:
+      summary: Melakukan pendaftaran akun
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
-        '200':
+        "200":
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterResponse"
+
+  /login:
+    post:
+      summary: Melakukan login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+
+  /logout:
+    post:
+      summary: Melakukan logout
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+
   /profile:
     get:
-      summary: Mendapatkan profil pengguna
+      summary: Mendapatkan Data Profile
       tags:
-        - Pengguna
-      security: # INI TEMPAT MENERAPKAN KEAMANAN PADA ENDPOINT INI
-        - bearerAuth: [] # Butuh 'bearerAuth' yang didefinisikan di components
+        - User Profile
+      security:
+        - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: OK
-          # ...
-        '401':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+        "401":
           description: Unauthorized
-          
-    post:
-      summary: Mendapatkan profil pengguna
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+    put:
+      summary: Memperbarui Profile
       tags:
-        - Pengguna
-      security: # INI TEMPAT MENERAPKAN KEAMANAN PADA ENDPOINT INI
-        - bearerAuth: [] # Butuh 'bearerAuth' yang didefinisikan di components
+        - User Profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutProfileRequest"
       responses:
-        '200':
+        "200":  
           description: OK
-          # ...
-        '401':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PutProfileResponse"
+        "401":
           description: Unauthorized
-          
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
 
-  /snacks:
-    get:
-      summary: Mendapatkan daftar jajanan
+  /delete-account:
+    delete:
+      summary: Menghapus akun
       tags:
-        - Jajanan
-      # TIDAK ADA BAGIAN 'security:' DI SINI, ARTINYA INI PUBLIK
+        - User Profile
+      security:
+        - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: OK
-          # ...
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAccountResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenResponse"
+
+  /products:
+    get:
+
+      tags:
+        - Products - Customers
+      summary: Mendapatkan daftar jajanan 
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            format: int64
+            default: 1
+          description: Nomor halaman yang akan diambil.
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Kata kunci pencarian
+          required: false
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Kategori jajanan
+          required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllProductsResponse"
+  
+  /products/{slug}:
+    get:
+      tags:
+        - Products - Customers
+      summary: 
+        Mendapatkan detail jajanan
+      description: 
+        Mendapatkan detail jajanan berdasarkan slug
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /categories:
+    get:
+      tags:
+        - Categories - Customers
+      summary: Mendapatkan daftar kategori
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllCategoriesResponse"
+
+  /carts:
+    get:
+      tags:
+        - Carts - Customers
+      summary: Mendapatkan daftar keranjang
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllCartsResponse"
+    post:
+      tags:
+        - Carts - Customers
+      summary: Menambahkan jajanan ke keranjang
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCartRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCartResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    put:
+      tags:
+        - Carts - Customers
+      summary: Memperbarui jumlah jajanan di keranjang
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutCartRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PutCartResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /carts/{id}:
+    delete:
+      tags:
+        - Carts - Customers
+      summary: Menghapus jajanan dari keranjang
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteCartResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /favorites:
+    get:
+      tags:
+        - Favorites - Customers
+      summary: Mendapatkan daftar jajanan yang disukai
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllFavoritesResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+    post:
+      tags:
+        - Favorites - Customers
+      summary: Menambahkan jajanan ke daftar suka
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostFavoriteResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /favorites/{id}:
+    delete:
+      tags:
+        - Favorites - Customers
+      summary: Menghapus jajanan dari daftar suka
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteFavoriteResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    
+  /orders:
+    post:
+      tags:
+        - Orders - Customers
+      summary: Membuat pesanan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostOrderRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostOrderResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+
+  /admin/products:
+    get:
+      tags:
+        - Products - Admin
+      summary: Mendapatkan daftar produk
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            format: int64
+            default: 1
+          description: Nomor halaman yang akan diambil.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllCategoriesResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+
+  /admin/products/{category_slug}:
+    get:
+      tags:
+        - Products - Admin
+      summary: Mendapatkan daftar produk dalam kategori
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            format: int64
+            default: 1
+          description: Nomor halaman yang akan diambil.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllProductsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+    post:
+      tags:
+        - Products - Admin
+      summary: Menambahkan produk
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostProductResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /admin/products/{category_slug}/{product_slug}:
+    put:
+      tags:
+        - Products - Admin
+      summary: Memperbarui produk
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PutProductResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:  
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/NotFoundResponse"
+    delete:
+      tags: 
+        - Products - Admin
+      summary: Menghapus produk
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteProductResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /admin/categories:
+    post:
+      tags: 
+        - Categories - Admin
+      summary: Menambahkan kategori
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCategoryRequest"
+      responses:
+        "200": 
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCategoryResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"  
+
+  /admin/categories/{category_slug}: 
+    put:
+      tags:
+        - Categories - Admin
+      summary: Memperbarui kategori
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutCategoryRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PutCategoryResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    delete:
+      tags:
+        - Categories - Admin
+      summary: Menghapus kategori
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteCategoryResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+              
+  /admin/orders:
+    get:
+      tags:
+        - Orders - Admin
+      summary: Mendapatkan daftar pesanan
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            format: int64
+            default: 1
+          description: Nomor halaman yang akan diambil.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllOrdersResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+    post:
+      tags:
+        - Orders - Admin
+      summary: Menambahkan pesanan
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostOrderResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+
+  /admin/orders/{order_id}:
+    get:
+      tags:
+        - Orders - Admin
+      summary: Mendapatkan detail pesanan
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrderResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    put:
+      tags: 
+        - Orders - Admin
+      summary: Memperbarui pesanan
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PutOrderResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    delete:
+      tags:
+        - Orders - Admin
+      summary: Menghapus pesanan
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteOrderResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /admin/transactions:
+    get:
+      tags:
+        - Transactions - Admin
+      summary: Mendapatkan daftar transaksi
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            format: int64
+            default: 1
+          description: Nomor halaman yang akan diambil.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllTransactionsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+  
+  /admin/transactions/{transaction_id}:
+    get:
+      tags:
+        - Transactions - Admin
+      summary: Mendapatkan detail transaksi
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTransactionResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    put:
+      tags:
+        - Transactions - Admin
+      summary: Memperbarui transaksi
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PutTransactionResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    delete:
+      tags: 
+        - Transactions - Admin
+      summary: Menghapus transaksi
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteTransactionResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /admin/offline-users:
+    get:
+      tags:
+        - Offline Users - Admin
+      summary: Mendapatkan daftar pengguna offline
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllOfflineUsersResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+    post:
+      tags:
+        - Offline Users - Admin
+      summary: Menambahkan pengguna offline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostOfflineUserRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostOfflineUserResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+  /admin/offline-users/{offline_user_id}:
+    get:
+      tags:
+        - Offline Users - Admin
+      summary: Mendapatkan detail pengguna offline
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOfflineUserResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    put:
+      tags:
+        - Offline Users - Admin
+      summary: Memperbarui pengguna offline
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PutOfflineUserResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+    delete:
+      tags:
+        - Offline Users - Admin
+      summary: Menghapus pengguna offline
+      responses:
+        "200":
+          description: OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteOfflineUserResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
+
+  /not-found:
+    get:
+      tags:
+        - Not Found
+      summary: Not Found
+      responses:
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponse"
