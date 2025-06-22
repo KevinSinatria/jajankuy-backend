@@ -74,7 +74,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         if (!$user){
-            return response()->json()([
+            return response()->json([
                 'success' => false,
                 'message' => 'Anda belum login, silahkan login terlebih dahulu.',
                 'errors' => null
