@@ -476,9 +476,9 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
           type: integer
           format: int64
           description: Stok jajanan
-        image_url:
+        image:
           type: string
-          description: URL gambar Jajanan (opsional)
+          description: gambar produk
 
     PostProductResponse:
       $ref: "#/components/schemas/SuccessResponse"
@@ -503,9 +503,12 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
           type: integer
           format: int64
           description: Stok jajanan
-        image_url:
+        image:
           type: string
-          description: URL gambar Jajanan (opsional)
+          description: gambar produk
+        _method:
+          type: string
+          description: PUT
 
     PutProductResponse:
       $ref: "#/components/schemas/SuccessResponse"
@@ -578,9 +581,9 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
         name:
           type: string
           description: Nama kategori
-        image_url:
+        image:
           type: string
-          description: URL gambar kategori
+          description: gambar kategori
 
     PostCategoryResponse:
       $ref: "#/components/schemas/SuccessResponse"
@@ -591,9 +594,12 @@ components: # Bagian ini untuk komponen yang bisa digunakan kembali (reusable) d
         name:
           type: string
           description: Nama kategori
-        image_url:
+        image:
           type: string
-          description: URL gambar kategori
+          description: gambar kategori
+        _method:
+          type: string
+          description: PUT
 
     PutCategoryResponse:
       $ref: "#/components/schemas/SuccessResponse"
@@ -1440,6 +1446,12 @@ paths:
       summary: Menambahkan produk
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PostProductRequest"
       responses:
         "200":
           description: OK
@@ -1467,12 +1479,18 @@ paths:
                 $ref: "#/components/schemas/NotFoundResponse"
 
   /admin/products/{category_slug}/{product_slug}:
-    put:
+    post:
       tags:
         - Products - Admin
       summary: Memperbarui produk
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PutProductRequest"
       responses:
         "200":
           description: OK
@@ -1540,7 +1558,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data::
             schema:
               $ref: "#/components/schemas/PostCategoryRequest"
       responses:
@@ -1564,7 +1582,7 @@ paths:
                 $ref: "#/components/schemas/ForbiddenResponse"
 
   /admin/categories/{category_slug}: 
-    put:
+    post:
       tags:
         - Categories - Admin
       summary: Memperbarui kategori
@@ -1573,7 +1591,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: "#/components/schemas/PutCategoryRequest"
       responses:
