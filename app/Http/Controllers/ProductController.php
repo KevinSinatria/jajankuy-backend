@@ -9,6 +9,7 @@ use Google\Service\Drive;
 use Google\Service\Drive\DriveFile;
 use Google\Service\Drive\Permission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -161,16 +162,182 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $categorySlug, $productSlug)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'description' => 'required|string',
+            'stock' => 'required|numeric',
+            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors(),
+                'errors' => (object) []
+            ], 422);
+        }
+
+        try {
+            $categoryId = Category::where('slug', $categorySlug)->first()->id;
+            $product = Product::where('category_id', $categoryId)->where('slug', $productSlug)->first();
+
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Produk tidak ditemukan',
+                    'errors' => (object) []
+                ], 404);
+            }
+
+            $client = $this->initializeGoogleClient();
+            $service = new Drive($client);
+            $newFileId = null;
+            $directUrl = $product->image_url;
+
+            if ($request->hasFile('image')) {
+                // Extract old file ID from image_url
+                preg_match('/id=([^&]+)/', $product->image_url, $matches);
+                $oldFileId = $matches[1] ?? null;
+
+                $imageFile = $request->file('image');
+                $fileName = time() . '_' . $imageFile->getClientOriginalName();
+
+                $fileMetadata = new DriveFile([
+                    'name' => $fileName,
+                    'parents' => ['1r7RzfDBRerzj43-FtrrcjW1sBR3oBMye'],
+                ]);
+
+                $content = file_get_contents($imageFile->getRealPath());
+                $file = $service->files->create($fileMetadata, [
+                    'data' => $content,
+                    'mimeType' => $imageFile->getClientMimeType(),
+                    'uploadType' => 'multipart',
+                    'fields' => 'id',
+                    'supportsAllDrives' => true
+                ]);
+
+                $newFileId = $file->id;
+
+                if (!$newFileId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal mengupload gambar',
+                        'errors' => (object) []
+                    ], 500);
+                }
+
+                if (!$this->makeFilePublic($newFileId)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal membuat file publik',
+                        'errors' => (object) []
+                    ], 500);
+                }
+
+                if ($oldFileId) {
+                    try {
+                        $service->files->delete($oldFileId, ['supportsAllDrives' => true]);
+                    } catch (\Exception $e) {
+                        Log::warning($e->getMessage());
+
+                        return response()->json([
+                            'success' => false,
+                            'message' => $e->getMessage(),
+                            'errors' => (object) []
+                        ], 500);
+                    }
+                }
+
+                $directUrl = 'https://drive.google.com/uc?id=' . $newFileId;
+            }
+
+            $slug = Str::slug($request->name ?? $product->name);
+
+            if (Product::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nama product sudah digunakan.',
+                    'errors' => (object) []
+                ], 422);
+            }
+
+            $product->update([
+                'name' => $request->name ?? $product->name,
+                'price' => $request->price ?? $product->price,
+                'description' => $request->description ?? $product->description,
+                'stock' => $request->stock ?? $product->stock,
+                'image_url' => $directUrl,
+                'slug' => $slug
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil diperbarui',
+                'data' => $product
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage(),
+                'errors' => (object) []
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($categorySlug, $productSlug)
     {
-        //
+        try {
+            $categoryId = Category::where('slug', $categorySlug)->first()->id;
+            $product = Product::where('category_id', $categoryId)->where('slug', $productSlug)->first();
+
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Produk tidak ditemukan',
+                    'errors' => (object) []
+                ], 404);
+            }
+
+            // Extract file ID from image_url
+            preg_match('/id=([^&]+)/', $product->image_url, $matches);
+            $fileId = $matches[1] ?? null;
+
+            if($fileId) {
+                $client = $this->initializeGoogleClient();
+                $service = new Drive($client);
+                try {
+                    $service->files->delete($fileId, ['supportsAllDrives' => true]);
+                } catch (\Exception $e) {
+                    Log::warning($e->getMessage());
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                        'errors' => (object) []
+                    ], 500);
+                }
+            }
+
+            $product->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil dihapus',
+                'data' => $product
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage(),
+                'errors' => (object) []
+            ], 500);
+        }
     }
 }
