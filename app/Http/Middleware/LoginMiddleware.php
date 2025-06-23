@@ -20,7 +20,9 @@ class LoginMiddleware
             return $next($request);
         } catch (AuthenticationException $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Anda belum login, silahkan login terlebih dahulu.',
+                'errors' => null
             ], Response::HTTP_UNAUTHORIZED);
         }
     }
