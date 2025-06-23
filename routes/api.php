@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
 use Google\Client;
 use Google\Service\Drive;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ Route::prefix('v1')->group(function() {
     // Auth
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('login.auth');
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('middleware.auth');
 
     // Admin Access
     Route::prefix('admin')->group(function() {
@@ -23,6 +24,10 @@ Route::prefix('v1')->group(function() {
             Route::post('/', [CategoryController::class, 'store']);
             Route::put('/{slug}', [CategoryController::class, 'update']);
             Route::delete('/{slug}', [CategoryController::class, 'destroy']);
+        });
+
+        Route::prefix('products')->group(function () {
+            Route::post('/{category_slug}', [ProductController::class, 'store']);
         });
     });
 });
