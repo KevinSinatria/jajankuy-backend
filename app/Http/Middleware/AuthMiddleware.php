@@ -4,10 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Auth\AuthenticationException;
 use Symfony\Component\HttpFoundation\Response;
 
-class LoginMiddleware
+class AuthMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,14 +15,13 @@ class LoginMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        try {
-            return $next($request);
-        } catch (AuthenticationException $e) {
+        if(!auth('api')->check()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda belum login, silahkan login terlebih dahulu.',
-                'errors' => null
             ], Response::HTTP_UNAUTHORIZED);
         }
+
+        return $next($request);
     }
 }
