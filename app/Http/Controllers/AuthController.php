@@ -70,17 +70,7 @@ class AuthController extends Controller
     }
 
     public function logout(Request $request){
-        $user = $request->user();
-
-        if (!$user){
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda belum login, silahkan login terlebih dahulu.',
-                'errors' => null
-            ], 401);
-        }
-
-        $user->currentAccessToken()->delete();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'success' => true,

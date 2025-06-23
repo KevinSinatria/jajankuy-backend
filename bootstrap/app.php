@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'login.auth' => \App\Http\Middleware\LoginMiddleware::class
+            'login.auth' => \App\Http\Middleware\LoginMiddleware::class,
+            'middleware.auth' => \App\Http\Middleware\AuthMiddleware::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
