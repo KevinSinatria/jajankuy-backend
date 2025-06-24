@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use Google\Client;
@@ -17,6 +18,10 @@ Route::prefix('v1')->group(function() {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('middleware.auth');
+
+    Route::prefix('carts')->group(function() {
+        Route::get('/', [CartController::class, 'index']);
+    });
 
     // Admin Access
     Route::prefix('admin')->group(function() {
