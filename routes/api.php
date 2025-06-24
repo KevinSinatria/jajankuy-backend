@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\UserProfileController;
 
 Route::get('/user', function (Request $request) {
@@ -21,9 +22,17 @@ Route::prefix('v1')->group(function() {
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('middleware.auth');
 
     Route::prefix('carts')->group(function() {
-        Route::get('/', [CartController::class, 'index']);
+        Route::get('/', [CartController::class, 'index'])->middleware('middleware.auth');
+        Route::post('/', [CartController::class, 'store'])->middleware('middleware.auth');
+        Route::delete('/{id}', [CartController::class, 'destroy'])->middleware('middleware.auth');
+        Route::put('/{id}', [CartController::class, 'update'])->middleware('middleware.auth');
     });
 
+    Route::prefix('favorites')->group(function() {
+        Route::get('/', [FavoriteController::class, 'getFavorite'])->middleware('middleware.auth');
+        Route::post('/', [FavoriteController::class, 'addToFavorite'])->middleware('middleware.auth');
+        Route::delete('/{id}', [FavoriteController::class, 'deteleFromFavorite'])->middleware('middleware.auth');
+    });
     // User Profile
     Route::get('/profile', [UserProfileController::class, 'get'])->middleware('middleware.auth');
     Route::put('/profile', [UserProfileController::class, 'update'])->middleware('middleware.auth');
