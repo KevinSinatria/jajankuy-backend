@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use Google\Client;
 use Google\Service\Drive;
 use Illuminate\Http\Request;
@@ -18,6 +19,10 @@ Route::prefix('v1')->group(function() {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('middleware.auth');
+
+    Route::prefix('carts')->group(function() {
+        Route::get('/', [CartController::class, 'index']);
+    });
 
     // User Profile
     Route::get('/profile', [UserProfileController::class, 'get'])->middleware('middleware.auth');
