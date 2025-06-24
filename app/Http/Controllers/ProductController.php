@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Product;
 use Google\Client;
@@ -182,7 +183,7 @@ class ProductController extends Controller
 
         try {
             $categoryId = Category::where('slug', $categorySlug)->first()->id;
-            $product = Product::where('category_id', $categoryId)->where('slug', $productSlug)->first();
+            $product = Product::with('cartItems')->where('category_id', $categoryId)->where('slug', $productSlug)->first();
 
             if (!$product) {
                 return response()->json([
@@ -255,6 +256,7 @@ class ProductController extends Controller
             }
 
             $slug = Str::slug($request->name ?? $product->name);
+            $allCartItems = $product->cartItems->where('product_id', $product->id)->all();
 
             if (Product::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
                 return response()->json([
@@ -262,6 +264,33 @@ class ProductController extends Controller
                     'message' => 'Nama product sudah digunakan.',
                     'errors' => (object) []
                 ], 422);
+            }
+
+            // Update prices di semua cart items (automation)
+            try {
+                foreach ($allCartItems as $cartItem) {
+                    $cartItem->update([
+                        'price_at_checkout' => $request->price ?? $product->price,
+                        'subtotal' => $request->price * $cartItem->quantity
+                    ]);
+
+                    // Update total price di cart
+                    $cart = Cart::with('cartItems')->where('id', $cartItem->cart_id)->first();
+
+                    if($cart) {
+                        $cart->update([
+                            'total_price' => $cart->cartItems->sum('subtotal')
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning($e->getMessage());
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors' => (object) []
+                ], 500);
             }
 
             $product->update([
@@ -309,7 +338,7 @@ class ProductController extends Controller
             preg_match('/id=([^&]+)/', $product->image_url, $matches);
             $fileId = $matches[1] ?? null;
 
-            if($fileId) {
+            if ($fileId) {
                 $client = $this->initializeGoogleClient();
                 $service = new Drive($client);
                 try {

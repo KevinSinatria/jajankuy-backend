@@ -25,7 +25,7 @@ Route::prefix('v1')->group(function() {
         Route::get('/', [CartController::class, 'index'])->middleware('middleware.auth');
         Route::post('/', [CartController::class, 'store'])->middleware('middleware.auth');
         Route::delete('/{id}', [CartController::class, 'destroy'])->middleware('middleware.auth');
-        Route::put('/{id}', [CartController::class, 'update'])->middleware('middleware.auth');
+        Route::put('/', [CartController::class, 'store'])->middleware('middleware.auth');
     });
 
     Route::prefix('favorites')->group(function() {

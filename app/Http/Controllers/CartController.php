@@ -15,14 +15,15 @@ class CartController extends Controller
     {
         $user = $request->user();
         try {
-             $carts = Cart::with([
+            $carts = Cart::with([
                 'cartItems.product.category',
                 'user'
             ])
-            ->where('user_id', $user->id)
-            ->get();
+                ->where('user_id', $user->id)
+                ->where('status', 'tertunda')
+                ->get();
 
-            if($carts->isEmpty()) {
+            if ($carts->isEmpty()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Keranjang kosong',
@@ -56,7 +57,7 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
-        try{
+        try {
             //cek apakah ada keranjang yang aktif
             $cart = Cart::FirstorCreate([
                 'user_id' => $user->id,
@@ -71,19 +72,37 @@ class CartController extends Controller
             }
 
             $existingItem = $cart->cartItems()->where('product_id', $request->product_id)->first();
-            
+
             if ($existingItem) {
+                // update info item yang sudah ada
                 $existingItem->quantity = $request->quantity;
                 $existingItem->subtotal = $existingItem->price_at_checkout * $request->quantity;
                 $existingItem->save();
+
+                // update info keranjang
+                $cart->total_price = $cart->cartItems()->sum('subtotal');
+                $cart->save();
             } else {
-                $product = Product::findOrFail($request->product_id);
+                $product = Product::find($request->product_id);
+
+                if(!$product) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Data tidak ditemukan',
+                        'errors' => (object) []
+                    ], 404);
+                }
+
                 $cart->cartItems()->create([
                     'product_id' => $product->id,
                     'quantity' => $request->quantity,
                     'price_at_checkout' => $product->price,
                     'subtotal' => $product->price * $request->quantity
                 ]);
+
+                // update info keranjang
+                $cart->total_price = $cart->cartItems()->sum('subtotal');
+                $cart->save();
             }
 
             return response()->json([
@@ -120,7 +139,7 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
-        try{
+        try {
             $cart = Cart::where('id', $id)->where('user_id', $user->id)->first();
 
             if (!$cart) {
@@ -139,9 +158,14 @@ class CartController extends Controller
                 ], 404);
             }
 
-            $cartItem->quantify = $request->quantity;
+            // update info item yang sudah ada
+            $cartItem->quantity = $request->quantity;
             $cartItem->subtotal = $cartItem->price_at_checkout * $request->quantity;
             $cartItem->save();
+
+            // update info keranjang
+            $cart->total_price = $cart->cartItems()->sum('subtotal');
+            $cart->save();
 
             return response()->json([
                 'success' => true,
@@ -160,7 +184,7 @@ class CartController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request,string $id)
+    public function destroy(Request $request, string $id)
     {
         $user = $request->user();
 
@@ -168,7 +192,7 @@ class CartController extends Controller
             'product_id' => 'required|exists:products,id',
         ]);
 
-        try{
+        try {
             $cart = Cart::where('id', $id)->where('user_id', $user->id)->first();
 
             if (!$cart) {
