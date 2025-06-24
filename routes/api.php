@@ -1,13 +1,14 @@
 <?php
 
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ProductController;
 use Google\Client;
 use Google\Service\Drive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\UserProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -22,6 +23,11 @@ Route::prefix('v1')->group(function() {
     Route::prefix('carts')->group(function() {
         Route::get('/', [CartController::class, 'index']);
     });
+
+    // User Profile
+    Route::get('/profile', [UserProfileController::class, 'get'])->middleware('middleware.auth');
+    Route::put('/profile', [UserProfileController::class, 'update'])->middleware('middleware.auth');
+    Route::delete('/profile', [UserProfileController::class, 'delete'])->middleware('middleware.auth');
 
     // Admin Access
     Route::prefix('admin')->group(function() {
