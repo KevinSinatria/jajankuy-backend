@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdsController;
 use Google\Client;
 use Google\Service\Drive;
 use Illuminate\Http\Request;
@@ -16,31 +17,32 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::prefix('v1')->group(function() {
+Route::prefix('v1')->group(function () {
     // Auth
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('middleware.auth');
 
-    Route::prefix('carts')->group(function() {
+    Route::prefix('carts')->group(function () {
         Route::get('/', [CartController::class, 'index'])->middleware('middleware.auth');
         Route::post('/', [CartController::class, 'store'])->middleware('middleware.auth');
         Route::delete('/{id}', [CartController::class, 'destroy'])->middleware('middleware.auth');
         Route::put('/', [CartController::class, 'store'])->middleware('middleware.auth');
     });
 
-    Route::prefix('favorites')->group(function() {
+    Route::prefix('favorites')->group(function () {
         Route::get('/', [FavoriteController::class, 'getFavorite'])->middleware('middleware.auth');
         Route::post('/', [FavoriteController::class, 'addToFavorite'])->middleware('middleware.auth');
         Route::delete('/{id}', [FavoriteController::class, 'deteleFromFavorite'])->middleware('middleware.auth');
     });
+
     // User Profile
     Route::get('/profile', [UserProfileController::class, 'get'])->middleware('middleware.auth');
     Route::put('/profile', [UserProfileController::class, 'update'])->middleware('middleware.auth');
     Route::delete('/profile', [UserProfileController::class, 'delete'])->middleware('middleware.auth');
 
     // Admin Access
-    Route::prefix('admin')->group(function() {
+    Route::prefix('admin')->group(function () {
         Route::prefix('categories')->group(function () {
             Route::post('/', [CategoryController::class, 'store']);
             Route::put('/{slug}', [CategoryController::class, 'update']);
@@ -59,6 +61,10 @@ Route::prefix('v1')->group(function() {
             Route::get('/{offline_user_id}', [OfflineController::class, 'show']);
             Route::put('/{offline_user_id}', [OfflineController::class, 'update']);
             Route::delete('/{offline_user_id}', [OfflineController::class, 'destroy']);
+        });
+
+        Route::prefix('ads')->group(function () {
+            Route::post('/', [AdsController::class, 'store']);
         });
     });
 });
