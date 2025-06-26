@@ -50,6 +50,8 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::prefix('products')->group(function () {
+            Route::get('/', [ProductController::class, 'index']);
+            Route::get('/{category_slug}', [ProductController::class, 'showByCategory']);
             Route::post('/{category_slug}', [ProductController::class, 'store']);
             Route::put('/{category_slug}/{product_slug}', [ProductController::class, 'update']);
             Route::delete('/{category_slug}/{product_slug}', [ProductController::class, 'destroy']);
