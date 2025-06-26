@@ -1,11 +1,12 @@
 <?php
 
-use App\Http\Controllers\CartController;
 use Google\Client;
 use Google\Service\Drive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
@@ -50,6 +51,14 @@ Route::prefix('v1')->group(function() {
             Route::post('/{category_slug}', [ProductController::class, 'store']);
             Route::put('/{category_slug}/{product_slug}', [ProductController::class, 'update']);
             Route::delete('/{category_slug}/{product_slug}', [ProductController::class, 'destroy']);
+        });
+
+        Route::prefix('offline-users')->group(function () {
+            Route::get('/', [OfflineController::class, 'index']);
+            Route::post('/', [OfflineController::class, 'store']);
+            Route::get('/{offline_user_id}', [OfflineController::class, 'show']);
+            Route::put('/{offline_user_id}', [OfflineController::class, 'update']);
+            Route::delete('/{offline_user_id}', [OfflineController::class, 'destroy']);
         });
     });
 });
