@@ -51,7 +51,13 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        $data = Category::paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengambil data',
+            'data' => $data
+        ], 200);
     }
 
     /**
@@ -155,9 +161,16 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function showByCategory(string $categorySlug)
     {
-        //
+        $categoryId = Category::where('slug', $categorySlug)->first()->id;
+        $data = Product::where('category_id', $categoryId)->paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengambil data',
+            'data' => $data
+        ], 200);
     }
 
     /**
