@@ -5,29 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class OfflineController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses untuk mengakses data'
-            ], 403);
-        }
-
         try {
-            $offline = User::where('role', 'offline')->get();
+            $offlineUsers = User::where('role', 'offline')->paginate(10);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Berhasil mengambil data',
-                'data' => $offline
+                'data' => $offlineUsers
             ], 200);
-            
+
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -39,21 +31,20 @@ class OfflineController extends Controller
 
     public function store(Request $request)
     {
-        $user = $request->user();
-
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses untuk mengakses data'
-            ], 403);
-        }
-
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required',
-                'email' => 'required|email',
+                'email' => 'required|email|unique:users,email',
                 'password' => 'required',
             ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email sudah terdaftar atau ada kolom yang kosong, silahkan coba lagi.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
             User::create([
                 'name' => $request->name,
@@ -78,15 +69,6 @@ class OfflineController extends Controller
 
     public function show(string $offline_user_id, Request $request)
     {
-        $user = $request->user();
-
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses untuk mengakses data'
-            ], 403);
-        }
-
         try {
             $offline = User::find($offline_user_id);
 
@@ -112,21 +94,20 @@ class OfflineController extends Controller
 
     public function update(Request $request, string $offline_user_id)
     {
-        $user = $request->user();
-
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses untuk mengakses data'
-            ], 403);
-        }
-
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required',
-                'email' => 'required|email',
+                'email' => 'required|email|unique:users,email,' . $offline_user_id,
                 'password' => 'required',
             ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email sudah terdaftar atau ada kolom yang kosong, silahkan coba lagi.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
             $offline = User::find($offline_user_id);
 
@@ -159,15 +140,6 @@ class OfflineController extends Controller
 
     public function destroy(string $offline_user_id, Request $request)
     {
-        $user = $request->user();
-
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses untuk mengakses data'
-            ], 403);
-        }
-
         try {
             $offline = User::find($offline_user_id);
 
