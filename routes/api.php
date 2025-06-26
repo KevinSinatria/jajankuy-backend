@@ -66,7 +66,9 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::prefix('ads')->group(function () {
+            Route::get('/', [AdsController::class, 'index']);
             Route::post('/', [AdsController::class, 'store']);
+            Route::delete('/{id}', [AdsController::class, 'destroy']);
         });
     });
 });
