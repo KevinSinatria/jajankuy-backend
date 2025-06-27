@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdsController;
+use App\Http\Controllers\CustomerCategoryController;
 use App\Http\Controllers\CustomerProductController;
 use Google\Client;
 use Google\Service\Drive;
@@ -27,6 +28,10 @@ Route::prefix('v1')->group(function () {
     Route::prefix('products')->group(function () {
         Route::get('/', [CustomerProductController::class, 'index']);
         Route::get('/{slug}', [CustomerProductController::class, 'show']);
+    });
+
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [CustomerCategoryController::class, 'index']);
     });
 
     Route::prefix('carts')->group(function () {
