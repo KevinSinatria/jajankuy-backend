@@ -4,6 +4,7 @@ use App\Http\Controllers\AdsController;
 use App\Http\Controllers\CustomerCategoryController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerProductController;
+use App\Http\Controllers\OrderController;
 use Google\Client;
 use Google\Service\Drive;
 use Illuminate\Http\Request;
@@ -25,11 +26,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-
-    Route::prefix('products')->group(function () {
-        Route::get('/', [CustomerProductController::class, 'index']);
-        Route::get('/{slug}', [CustomerProductController::class, 'show']);
-    });
 
     Route::prefix('categories')->group(function () {
         Route::get('/', [CustomerCategoryController::class, 'index']);
@@ -62,12 +58,14 @@ Route::prefix('v1')->group(function () {
 
     // Admin Access
     Route::prefix('admin')->group(function () {
+        // Categories Management
         Route::prefix('categories')->group(function () {
             Route::post('/', [CategoryController::class, 'store']);
             Route::put('/{slug}', [CategoryController::class, 'update']);
             Route::delete('/{slug}', [CategoryController::class, 'destroy']);
         });
 
+        // Products Management
         Route::prefix('products')->group(function () {
             Route::get('/', [ProductController::class, 'index']);
             Route::get('/{category_slug}', [ProductController::class, 'showByCategory']);
@@ -76,6 +74,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{category_slug}/{product_slug}', [ProductController::class, 'destroy']);
         });
 
+        // Offline Users Management  
         Route::prefix('offline-users')->group(function () {
             Route::get('/', [OfflineController::class, 'index']);
             Route::post('/', [OfflineController::class, 'store']);
@@ -84,10 +83,19 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{offline_user_id}', [OfflineController::class, 'destroy']);
         });
 
+        // Ads Management
         Route::prefix('ads')->group(function () {
             Route::get('/', [AdsController::class, 'index']);
             Route::post('/', [AdsController::class, 'store']);
             Route::delete('/{id}', [AdsController::class, 'destroy']);
+        });
+
+        // Orders Management
+        Route::prefix('orders')->group(function () {
+            Route::get('/', [OrderController::class, 'index']);
+            Route::get('/{id}', [OrderController::class, 'show']);
+            Route::put('/{id}', [OrderController::class, 'update']);
+            Route::delete('/{id}', [OrderController::class, 'destroy']);
         });
     });
 });
