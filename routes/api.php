@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdsController;
+use App\Http\Controllers\CustomerProductController;
 use Google\Client;
 use Google\Service\Drive;
 use Illuminate\Http\Request;
@@ -21,25 +22,32 @@ Route::prefix('v1')->group(function () {
     // Auth
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('middleware.auth');
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+    Route::prefix('products')->group(function () {
+        Route::get('/', [CustomerProductController::class, 'index']);
+        Route::get('/{slug}', [CustomerProductController::class, 'show']);
+    });
 
     Route::prefix('carts')->group(function () {
-        Route::get('/', [CartController::class, 'index'])->middleware('middleware.auth');
-        Route::post('/', [CartController::class, 'store'])->middleware('middleware.auth');
-        Route::delete('/{id}', [CartController::class, 'destroy'])->middleware('middleware.auth');
-        Route::put('/', [CartController::class, 'store'])->middleware('middleware.auth');
-    });
+        Route::get('/', [CartController::class, 'index']);
+        Route::post('/', [CartController::class, 'store']);
+        Route::delete('/{id}', [CartController::class, 'destroy']);
+        Route::put('/', [CartController::class, 'store']);
+    })->middleware('auth:sanctum');
 
     Route::prefix('favorites')->group(function () {
-        Route::get('/', [FavoriteController::class, 'getFavorite'])->middleware('middleware.auth');
-        Route::post('/', [FavoriteController::class, 'addToFavorite'])->middleware('middleware.auth');
-        Route::delete('/{id}', [FavoriteController::class, 'deteleFromFavorite'])->middleware('middleware.auth');
-    });
+        Route::get('/', [FavoriteController::class, 'getFavorite']);
+        Route::post('/', [FavoriteController::class, 'addToFavorite']);
+        Route::delete('/{id}', [FavoriteController::class, 'deteleFromFavorite']);
+    })->middleware('auth:sanctum');
 
     // User Profile
-    Route::get('/profile', [UserProfileController::class, 'get'])->middleware('middleware.auth');
-    Route::put('/profile', [UserProfileController::class, 'update'])->middleware('middleware.auth');
-    Route::delete('/profile', [UserProfileController::class, 'delete'])->middleware('middleware.auth');
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [UserProfileController::class, 'get']);
+        Route::put('/', [UserProfileController::class, 'update']);
+        Route::delete('/', [UserProfileController::class, 'delete']);
+    })->middleware('auth:sanctum');
 
     // Admin Access
     Route::prefix('admin')->group(function () {
