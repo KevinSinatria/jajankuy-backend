@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdsController;
 use App\Http\Controllers\CustomerCategoryController;
+use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerProductController;
 use Google\Client;
 use Google\Service\Drive;
@@ -32,6 +33,11 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('categories')->group(function () {
         Route::get('/', [CustomerCategoryController::class, 'index']);
+    });
+
+    Route::prefix('orders')->group(function () {
+        Route::post('/', [CustomerOrderController::class, 'store']);
+        Route::put('/{id}/cancel', [CustomerOrderController::class, 'update']);
     });
 
     Route::prefix('carts')->group(function () {
