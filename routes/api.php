@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerCategoryController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerProductController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\TransactionController;
 use Google\Client;
 use Google\Service\Drive;
 use Illuminate\Http\Request;
@@ -96,6 +97,15 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}', [OrderController::class, 'show']);
             Route::put('/{id}', [OrderController::class, 'update']);
             Route::delete('/{id}', [OrderController::class, 'destroy']);
+        });
+
+        // Transaction Managemement
+        Route::prefix('transactions')->group(function () {
+            Route::get('/', [TransactionController::class, 'index']);
+            Route::post('/', [TransactionController::class, 'store']);
+            Route::get('/{id}', [TransactionController::class, 'show']);
+            Route::put('/{id}', [TransactionController::class, 'update']);
+            Route::delete('/{id}', [TransactionController::class, 'destroy']);
         });
     });
 });
