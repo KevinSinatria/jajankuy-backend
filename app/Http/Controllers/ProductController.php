@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Transaction;
 use Google\Client;
 use Google\Service\Drive;
 use Google\Service\Drive\DriveFile;
@@ -125,6 +126,8 @@ class ProductController extends Controller
             $directUrl = 'https://drive.google.com/uc?id=' . $fileId;
             $slug = Str::slug($request->name);
             $categoryId = Category::where('slug', $categorySlug)->first()->id;
+            $user = $request->user();
+            $expenceTotal = $request->price * $request->stock;
 
             if (Product::where('slug', $slug)->exists()) {
                 return response()->json([
@@ -142,6 +145,14 @@ class ProductController extends Controller
                 'category_id' => $categoryId,
                 'stock' => $request->stock,
                 'image_url' => $directUrl
+            ]);
+
+            $newTransaction = Transaction::create([
+                'user_id' => $user->id,
+                'type' => 'Pengeluaran',
+                'amount' => $expenceTotal,
+                'description' => 'Pembelian Produk ' . $product->name,
+                'transaction_date' => now()
             ]);
 
             return response()->json([
@@ -270,6 +281,7 @@ class ProductController extends Controller
 
             $slug = Str::slug($request->name ?? $product->name);
             $allCartItems = $product->cartItems->where('product_id', $product->id)->all();
+            $user = $request->user();
 
             if (Product::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
                 return response()->json([
@@ -304,6 +316,17 @@ class ProductController extends Controller
                     'message' => $e->getMessage(),
                     'errors' => (object) []
                 ], 500);
+            }
+
+            if($request->stock > $product->stock) {
+                $newAmountTransaction = ($request->price ?? $product->price) * ($request->stock - $product->stock);
+                $newTransaction = Transaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'Pengeluaran',
+                    'amount' => $newAmountTransaction,
+                    'description' => 'Penambahan Stok Produk ' . $product->name . ' sebanyak '. $request->stock - $product->stock,
+                    'transaction_date' => now()
+                ]);
             }
 
             $product->update([
