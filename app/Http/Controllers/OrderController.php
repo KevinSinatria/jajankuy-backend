@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Transaction;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -90,23 +91,18 @@ class OrderController extends Controller
                 ], 404);
             }
 
-            if ($request->status == 'diproses') {
+            if ($request->status != 'selesai') {
                 $order->update([
-                    'status' => 'diproses'
+                    'status' => $request->status
                 ]);
-            }
 
-            if ($request->status == 'siap_diambil') {
-                $order->update([
-                    'status' => 'siap_diambil'
-                ]);
-            }
+                $transactions = Transaction::where('type', 'Pemasukan')->where('description', 'Pembayaran untuk order ' . $order->id)->where('user_id', $order->user_id)->get();
 
-            if ($request->status == 'dibatalkan') {
-                $order->update([
-                    'status' => 'dibatalkan',
-                    'cancelled_at' => now()
-                ]);
+                if ($transactions) {
+                    foreach ($transactions as $transaction) {
+                        $transaction->delete();
+                    }
+                }
             }
 
             if ($request->status == 'selesai') {
@@ -114,6 +110,15 @@ class OrderController extends Controller
                     'status' => 'selesai',
                     'paid_at' => now(),
                     'is_paid' => true
+                ]);
+
+                // Automatisasi transaksi
+                $transaction = Transaction::create([
+                    'user_id' => $order->user_id,
+                    'type' => 'Pemasukan',
+                    'amount' => $order->total_price,
+                    'description' => 'Pembayaran untuk order ' . $order->id,
+                    'transaction_date' => $order->paid_at
                 ]);
             }
 
@@ -145,6 +150,12 @@ class OrderController extends Controller
                     'message' => 'Order tidak ditemukan',
                     'errors' => (object) []
                 ], 404);
+            }
+
+            $transaction = Transaction::where('type', 'Pemasukan')->where('description', 'Pembayaran untuk order ' . $order->id)->where('user_id', $order->user_id)->first();
+
+            if ($transaction) {
+                $transaction->delete();
             }
 
             if ($order->delete()) {
