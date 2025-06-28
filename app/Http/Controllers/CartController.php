@@ -61,7 +61,8 @@ class CartController extends Controller
             //cek apakah ada keranjang yang aktif
             $cart = Cart::FirstorCreate([
                 'user_id' => $user->id,
-                'status' => 'tertunda'
+                'status' => 'tertunda',
+                'total_price' => 0
             ]);
 
             if (!$cart) {
