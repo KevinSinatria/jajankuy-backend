@@ -7,7 +7,7 @@ use App\Models\User;
 
 class UserProfileController extends Controller
 {
-    public function get(Request $request){
+    public function show(Request $request){
         $user = $request->user();
 
          if (!$user){

@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMiddleware
+class CustomerMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,10 +16,11 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($user->role !== 'admin') {
+
+        if($user->role !== 'customer' || $user->role !== 'offline') {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda bukan admin, dan akses tidak diizinkan.',
+                'message' => 'Anda bukan customer, dan akses tidak diizinkan.',
             ], 403);
         }
         return $next($request);

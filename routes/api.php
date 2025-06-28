@@ -23,89 +23,92 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->group(function () {
-    // Auth
-    Route::post('/login', [AuthController::class, 'login'])->name('login');
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-
-    Route::prefix('categories')->group(function () {
-        Route::get('/', [CustomerCategoryController::class, 'index']);
+    // Auth Routes
+    Route::controller(AuthController::class)->group(function () {
+        Route::post('/login', 'login')->name('login');
+        Route::post('/register', 'register');
+        Route::post('/logout', 'logout')->middleware('auth:sanctum');
     });
 
-    Route::prefix('orders')->group(function () {
-        Route::post('/', [CustomerOrderController::class, 'store']);
-        Route::put('/{id}/cancel', [CustomerOrderController::class, 'update']);
+    // Customer Routes
+    Route::prefix('categories')->controller(CustomerCategoryController::class)->group(function () {
+        Route::get('/', 'index');
     });
 
-    Route::prefix('carts')->group(function () {
-        Route::get('/', [CartController::class, 'index']);
-        Route::post('/', [CartController::class, 'store']);
-        Route::delete('/{id}', [CartController::class, 'destroy']);
-        Route::put('/', [CartController::class, 'store']);
-    })->middleware('auth:sanctum');
+    Route::prefix('orders')->controller(CustomerOrderController::class)->group(function () {
+        Route::post('/', 'store');
+        Route::put('/{id}/cancel', 'cancel');
+    });
 
-    Route::prefix('favorites')->group(function () {
-        Route::get('/', [FavoriteController::class, 'getFavorite']);
-        Route::post('/', [FavoriteController::class, 'addToFavorite']);
-        Route::delete('/{id}', [FavoriteController::class, 'deteleFromFavorite']);
-    })->middleware('auth:sanctum');
+    // Protected User Routes
+    Route::middleware('auth:sanctum')->group(function () {
+        // Protected Customer Routes
+        Route::middleware('middleware.customer')->group(function () {
+            Route::prefix('carts')->controller(CartController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::delete('/{id}', 'destroy');
+                Route::put('/', 'store');
+            });
 
-    // User Profile
-    Route::prefix('profile')->group(function () {
-        Route::get('/', [UserProfileController::class, 'get']);
-        Route::put('/', [UserProfileController::class, 'update']);
-        Route::delete('/', [UserProfileController::class, 'delete']);
-    })->middleware('auth:sanctum');
-
-    // Admin Access
-    Route::prefix('admin')->group(function () {
-        // Categories Management
-        Route::prefix('categories')->group(function () {
-            Route::post('/', [CategoryController::class, 'store']);
-            Route::put('/{slug}', [CategoryController::class, 'update']);
-            Route::delete('/{slug}', [CategoryController::class, 'destroy']);
+            Route::prefix('favorites')->controller(FavoriteController::class)->group(function () {
+                Route::get('/', 'getFavorite');
+                Route::post('/', 'addToFavorite');
+                Route::delete('/{id}', 'deleteFromFavorite');
+            });
         });
 
-        // Products Management
-        Route::prefix('products')->group(function () {
-            Route::get('/', [ProductController::class, 'index']);
-            Route::get('/{category_slug}', [ProductController::class, 'showByCategory']);
-            Route::post('/{category_slug}', [ProductController::class, 'store']);
-            Route::put('/{category_slug}/{product_slug}', [ProductController::class, 'update']);
-            Route::delete('/{category_slug}/{product_slug}', [ProductController::class, 'destroy']);
+        Route::prefix('profile')->controller(UserProfileController::class)->group(function () {
+            Route::get('/', 'show');
+            Route::put('/', 'update');
         });
 
-        // Offline Users Management  
-        Route::prefix('offline-users')->group(function () {
-            Route::get('/', [OfflineController::class, 'index']);
-            Route::post('/', [OfflineController::class, 'store']);
-            Route::get('/{offline_user_id}', [OfflineController::class, 'show']);
-            Route::put('/{offline_user_id}', [OfflineController::class, 'update']);
-            Route::delete('/{offline_user_id}', [OfflineController::class, 'destroy']);
-        });
+        Route::delete('delete-account', [UserProfileController::class, 'delete']);
 
-        // Ads Management
-        Route::prefix('ads')->group(function () {
-            Route::get('/', [AdsController::class, 'index']);
-            Route::post('/', [AdsController::class, 'store']);
-            Route::delete('/{id}', [AdsController::class, 'destroy']);
-        });
+        // Protected Admin Routes
+        Route::prefix('admin')->middleware('middleware.admin')->group(function () {
+            Route::prefix('categories')->controller(CategoryController::class)->group(function () {
+                Route::post('/', 'store');
+                Route::put('/{slug}', 'update');
+                Route::delete('/{slug}', 'destroy');
+            });
 
-        // Orders Management
-        Route::prefix('orders')->group(function () {
-            Route::get('/', [OrderController::class, 'index']);
-            Route::get('/{id}', [OrderController::class, 'show']);
-            Route::put('/{id}', [OrderController::class, 'update']);
-            Route::delete('/{id}', [OrderController::class, 'destroy']);
-        });
+            Route::prefix('products')->controller(ProductController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::get('/{category_slug}', 'showByCategory');
+                Route::post('/{category_slug}', 'store');
+                Route::put('/{category_slug}/{product_slug}', 'update');
+                Route::delete('/{category_slug}/{product_slug}', 'destroy');
+            });
 
-        // Transaction Managemement
-        Route::prefix('transactions')->group(function () {
-            Route::get('/', [TransactionController::class, 'index']);
-            Route::post('/', [TransactionController::class, 'store']);
-            Route::get('/{id}', [TransactionController::class, 'show']);
-            Route::put('/{id}', [TransactionController::class, 'update']);
-            Route::delete('/{id}', [TransactionController::class, 'destroy']);
+            Route::prefix('offline-users')->controller(OfflineController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::get('/{offline_user_id}', 'show');
+                Route::put('/{offline_user_id}', 'update');
+                Route::delete('/{offline_user_id}', 'destroy');
+            });
+
+            Route::prefix('ads')->controller(AdsController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::delete('/{id}', 'destroy');
+            });
+
+            Route::prefix('orders')->controller(OrderController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::get('/{id}', 'show');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
+            });
+
+            Route::prefix('transactions')->controller(TransactionController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::get('/{id}', 'show');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
+            });
         });
     });
 });
