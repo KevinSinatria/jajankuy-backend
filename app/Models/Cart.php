@@ -12,6 +12,7 @@ class Cart extends Model
         'user_id',
         'status',
         'added_at',
+        'total_price'
     ];
 
     public function cartItems() {

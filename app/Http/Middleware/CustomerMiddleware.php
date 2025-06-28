@@ -17,12 +17,12 @@ class CustomerMiddleware
     {
         $user = $request->user();
 
-        if($user->role !== 'customer' || $user->role !== 'offline') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda bukan customer, dan akses tidak diizinkan.',
-            ], 403);
+        if ($user->role === 'customer' || $user->role === 'offline') {
+            return $next($request);
         }
-        return $next($request);
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda bukan customer, dan akses tidak diizinkan.',
+        ], 403);
     }
 }

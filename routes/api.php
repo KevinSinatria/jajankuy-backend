@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerCategoryController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerProductController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\StatController;
 use App\Http\Controllers\TransactionController;
 use Google\Client;
 use Google\Service\Drive;
@@ -41,7 +42,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Protected User Routes
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('middleware.auth')->group(function () {
         // Protected Customer Routes
         Route::middleware('middleware.customer')->group(function () {
             Route::prefix('carts')->controller(CartController::class)->group(function () {
@@ -108,6 +109,12 @@ Route::prefix('v1')->group(function () {
                 Route::get('/{id}', 'show');
                 Route::put('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
+            });
+
+            Route::prefix('stats')->controller(StatController::class)->group(function () {
+                Route::get('/expense-income', 'getExpenseIncome');
+                Route::get('/overview', 'getOverview');
+                Route::get('/product-sales-by-category', 'getProductSalesByCategory');
             });
         });
     });
