@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Transaction;
 use Google\Client;
 use Google\Service\Drive;
 use Google\Service\Drive\DriveFile;
@@ -50,7 +52,13 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        $data = Category::paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengambil data',
+            'data' => $data
+        ], 200);
     }
 
     /**
@@ -118,6 +126,8 @@ class ProductController extends Controller
             $directUrl = 'https://drive.google.com/uc?id=' . $fileId;
             $slug = Str::slug($request->name);
             $categoryId = Category::where('slug', $categorySlug)->first()->id;
+            $user = $request->user();
+            $expenceTotal = $request->price * $request->stock;
 
             if (Product::where('slug', $slug)->exists()) {
                 return response()->json([
@@ -137,6 +147,14 @@ class ProductController extends Controller
                 'image_url' => $directUrl
             ]);
 
+            $newTransaction = Transaction::create([
+                'user_id' => $user->id,
+                'type' => 'Pengeluaran',
+                'amount' => $expenceTotal,
+                'description' => 'Pembelian Produk ' . $product->name,
+                'transaction_date' => now()
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Produk berhasil ditambahkan!',
@@ -154,9 +172,16 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function showByCategory(string $categorySlug)
     {
-        //
+        $categoryId = Category::where('slug', $categorySlug)->first()->id;
+        $data = Product::where('category_id', $categoryId)->paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengambil data',
+            'data' => $data
+        ], 200);
     }
 
     /**
@@ -182,7 +207,7 @@ class ProductController extends Controller
 
         try {
             $categoryId = Category::where('slug', $categorySlug)->first()->id;
-            $product = Product::where('category_id', $categoryId)->where('slug', $productSlug)->first();
+            $product = Product::with('cartItems')->where('category_id', $categoryId)->where('slug', $productSlug)->first();
 
             if (!$product) {
                 return response()->json([
@@ -255,6 +280,8 @@ class ProductController extends Controller
             }
 
             $slug = Str::slug($request->name ?? $product->name);
+            $allCartItems = $product->cartItems->where('product_id', $product->id)->all();
+            $user = $request->user();
 
             if (Product::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
                 return response()->json([
@@ -262,6 +289,44 @@ class ProductController extends Controller
                     'message' => 'Nama product sudah digunakan.',
                     'errors' => (object) []
                 ], 422);
+            }
+
+            // Update prices di semua cart items (automation)
+            try {
+                foreach ($allCartItems as $cartItem) {
+                    $cartItem->update([
+                        'price_at_checkout' => $request->price ?? $product->price,
+                        'subtotal' => $request->price * $cartItem->quantity
+                    ]);
+
+                    // Update total price di cart
+                    $cart = Cart::with('cartItems')->where('id', $cartItem->cart_id)->first();
+
+                    if($cart) {
+                        $cart->update([
+                            'total_price' => $cart->cartItems->sum('subtotal')
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning($e->getMessage());
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors' => (object) []
+                ], 500);
+            }
+
+            if($request->stock > $product->stock) {
+                $newAmountTransaction = ($request->price ?? $product->price) * ($request->stock - $product->stock);
+                $newTransaction = Transaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'Pengeluaran',
+                    'amount' => $newAmountTransaction,
+                    'description' => 'Penambahan Stok Produk ' . $product->name . ' sebanyak '. $request->stock - $product->stock,
+                    'transaction_date' => now()
+                ]);
             }
 
             $product->update([
@@ -309,7 +374,7 @@ class ProductController extends Controller
             preg_match('/id=([^&]+)/', $product->image_url, $matches);
             $fileId = $matches[1] ?? null;
 
-            if($fileId) {
+            if ($fileId) {
                 $client = $this->initializeGoogleClient();
                 $service = new Drive($client);
                 try {

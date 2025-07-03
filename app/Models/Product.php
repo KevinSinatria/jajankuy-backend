@@ -25,6 +25,10 @@ class Product extends Model
         return $this->belongsToMany(Cart::class, 'cart_items', 'product_id', 'cart_id')->withPivot('quantity', 'price_at_checkout', 'subtotal');
     }
 
+    public function cartItems() {
+        return $this->hasMany(CartItem::class, 'product_id', 'id');
+    }
+
     public function favoritedByUsers()
     {
         return $this->belongsToMany(User::class, 'favorites', 'product_id', 'user_id');
